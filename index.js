@@ -23,11 +23,11 @@ async function main() {
   //
   // 4. Match pages with tags and update.
   const pagesToUpdate = convertFeedbackToTags(pagesWithFeedback, options)
-  logger({ pagesToUpdate })
+  // logger({ pagesToUpdate })
   await updatePages(pagesToUpdate)
   //
   // 5. Celebrate!
-  // logger({ wooo: "WOOO!" })
+  logger({ wooo: "WOOO!" })
 }
 
 //*========================================================================
