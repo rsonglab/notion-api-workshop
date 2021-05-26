@@ -10,12 +10,12 @@ const databaseId = process.env.NOTION_DATABASE_ID
 async function main() {
   // 1. Add all tweets to feedback database.
   const pagesToCreate = convertTweetsToCreatePageOperations(tweets)
-  logger({ pagesToCreate })
+  // logger({ pagesToCreate })
   await createPages(pagesToCreate)
   //
   // 2. Get options from database schema for tagging.
-  // const options = await getDatabaseTagOptions()
-  // logger({ options })
+  const options = await getDatabaseTagOptions()
+  logger({ options })
   //
   // 3. Get existing pages in the database.
   // const pagesWithFeedback = await queryDatabase()
@@ -77,6 +77,11 @@ async function createPages(pagesToCreate) {
  */
 async function getDatabaseTagOptions() {
   // https://developers.notion.com/reference/get-database
+  const databaseResponse = await notion.databases.retrieve({
+    database_id: databaseId,
+  })
+  const tagProperty = databaseResponse.properties["Tags"]
+  return tagProperty.multi_select.options
 }
 
 /**
