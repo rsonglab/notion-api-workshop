@@ -15,11 +15,11 @@ async function main() {
   //
   // 2. Get options from database schema for tagging.
   const options = await getDatabaseTagOptions()
-  logger({ options })
+  // logger({ options })
   //
   // 3. Get existing pages in the database.
-  // const pagesWithFeedback = await queryDatabase()
-  // logger({ pagesWithFeedback })
+  const pagesWithFeedback = await queryDatabase()
+  logger({ pagesWithFeedback })
   //
   // 4. Match pages with tags and update.
   // const pagesToUpdate = convertFeedbackToTags(pagesWithFeedback, options)
@@ -92,6 +92,44 @@ async function getDatabaseTagOptions() {
  */
 async function queryDatabase() {
   // https://developers.notion.com/reference/post-database-query
+  let pages = []
+  let cursor = undefined
+  while (true) {
+    const { results, next_cursor } = await notion.databases.query({
+      database_id: databaseId,
+      filter: {
+        property: "Tags",
+        multi_select: {
+          is_empty: true,
+        },
+      },
+      sorts: [
+        {
+          timestamp: "created_time",
+          direction: "descending",
+        },
+      ],
+      page_size: 10,
+      start_cursor: cursor,
+    })
+
+    pages.push(...results)
+
+    if (!next_cursor) {
+      break
+    }
+    cursor = next_cursor
+  }
+
+  return pages.map((page) => {
+    const titleProperty = page.properties["Feedback"]
+    const richText = titleProperty.title
+    const feedback = richText.map(({ plain_text }) => plain_text).join("")
+    return {
+      pageId: page.id,
+      feedback,
+    }
+  })
 }
 
 /**
