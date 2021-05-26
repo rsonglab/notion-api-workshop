@@ -19,12 +19,12 @@ async function main() {
   //
   // 3. Get existing pages in the database.
   const pagesWithFeedback = await queryDatabase()
-  logger({ pagesWithFeedback })
+  // logger({ pagesWithFeedback })
   //
   // 4. Match pages with tags and update.
-  // const pagesToUpdate = convertFeedbackToTags(pagesWithFeedback, options)
-  // logger({ pagesToUpdate })
-  // await updatePages(pagesToUpdate)
+  const pagesToUpdate = convertFeedbackToTags(pagesWithFeedback, options)
+  logger({ pagesToUpdate })
+  await updatePages(pagesToUpdate)
   //
   // 5. Celebrate!
   // logger({ wooo: "WOOO!" })
@@ -139,6 +139,18 @@ async function queryDatabase() {
  */
 async function updatePages(pagesToUpdate) {
   // https://developers.notion.com/reference/patch-page
+  await Promise.all(
+    pagesToUpdate.map(({ pageId, tags }) =>
+      notion.pages.update({
+        page_id: pageId,
+        properties: {
+          Tags: {
+            multi_select: tags,
+          },
+        },
+      })
+    )
+  )
 }
 
 //*========================================================================
@@ -161,7 +173,7 @@ async function shouldCreateNewTweets() {
  * Array<{ feedback: string, url: string }>
  */
 function convertTweetsToCreatePageOperations(tweets) {
-  return tweets.map(tweet => {
+  return tweets.map((tweet) => {
     const [{ expanded_url }] = tweet.entities.urls
     return { feedback: tweet.text, url: expanded_url }
   })
@@ -194,7 +206,7 @@ function convertFeedbackToTags(pagesWithFeedback, options) {
       }
       return { pageId, tags }
     })
-    .filter(result => result)
+    .filter((result) => result)
 }
 
 /**
