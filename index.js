@@ -9,9 +9,9 @@ const databaseId = process.env.NOTION_DATABASE_ID
 
 async function main() {
   // 1. Add all tweets to feedback database.
-  // const pagesToCreate = convertTweetsToCreatePageOperations(tweets)
-  // logger({ pagesToCreate })
-  // await createPages(pagesToCreate)
+  const pagesToCreate = convertTweetsToCreatePageOperations(tweets)
+  logger({ pagesToCreate })
+  await createPages(pagesToCreate)
   //
   // 2. Get options from database schema for tagging.
   // const options = await getDatabaseTagOptions()
@@ -45,6 +45,28 @@ async function createPages(pagesToCreate) {
     return
   }
   // https://developers.notion.com/reference/post-page
+  await Promise.all(
+    pagesToCreate.map(({ feedback, url }) =>
+      notion.pages.create({
+        parent: {
+          database_id: databaseId,
+        },
+        properties: {
+          Feedback: {
+            title: [
+              {
+                type: "text",
+                text: {
+                  content: feedback,
+                },
+              },
+            ],
+          },
+          URL: { url },
+        },
+      })
+    )
+  )
 }
 
 /**
